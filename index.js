@@ -1,8 +1,7 @@
 const axios = require('axios');
-const config = require('./config.json');
+const fs = require('fs');
 
-const MAILGUN_API = 'https://api.mailgun.net/v3/';
-const TELEGRAM_API = 'https://api.telegram.org/';
+const config = require('./config.json');
 
 const escapeHtml = text => {
 	const escapeSet = {'"': '&quot;', '&': '&amp;', '<': '&lt;', '>': '&gt;'};
@@ -15,7 +14,7 @@ const report = async (item, description) => {
 		url: `https://api.telegram.org/bot${config.telegram}/sendMessage`,
 		data: {
 			chat_id: config.telegramTo,
-			text: `<b>${escapeHtml(item)}<b>\n\n<pre>${escapeHtml(description)}</pre>`,
+			text: `<b>${escapeHtml(item)}</b>\n\n<pre>${escapeHtml(description)}</pre>`,
 			parse_mode: 'HTML'
 		}
 	});
@@ -23,25 +22,33 @@ const report = async (item, description) => {
 
 
 (async () => {
+	let lastRun = 0;
+	
+	try {
+		lastRun = fs.readFileSync('./lastrun.dat', 'utf8');
+	} catch(e){}
+	
 	for(let domain of config.mailgunDomains) {
 		try {
 			const {data} = await axios({
-				url: `/${domain}/bounces`,
-				baseURL: MAILGUN_API,
+				url: `https://api.mailgun.net/v3/${domain}/bounces`,
 				auth: {
 					username: 'api',
 					password: config.mailgunKey
 				}
 			});
 			
-			if(data.items.length > 0) {
+			const items = data.items.filter(({created_at}) => new Date(created_at).getTime() > lastRun);
+			if(items.length > 0) {
 				await report(
-					`[MAILGUN DROPCHECK] About ${data.items.length} emails have been dropped on ${domain}!!`,
-					JSON.stringify(data, '\t')
+					`[MAILGUN DROPCHECK] About ${items.length} emails have been dropped on ${domain}!!`,
+					JSON.stringify(items, '\t')
 				);
 			}
 		} catch(e) {
 			await report("[MAILGUN DROPCHECK] Error while retrieving!", e.stack);
 		}
 	}
+	
+	fs.writeFileSync('./lastrun.dat', Date.now());
 })();
