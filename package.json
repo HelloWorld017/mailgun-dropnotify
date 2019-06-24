@@ -1,0 +1,23 @@
+{
+  "name": "mailgun-dropnotify",
+  "version": "1.0.0",
+  "description": "Notifies you when mailgun drops",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HelloWorld017/mailgun-dropnotify.git"
+  },
+  "keywords": [
+    "mailgun"
+  ],
+  "author": "Khinenw",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HelloWorld017/mailgun-dropnotify/issues"
+  },
+  "homepage": "https://github.com/HelloWorld017/mailgun-dropnotify#readme",
+  "dependencies": {}
+}
